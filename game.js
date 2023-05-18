@@ -5,7 +5,7 @@ class Intro extends Phaser.Scene {
     preload() {
         this.load.path = "./assets/";
         this.load.image("studiologo", "pandared@2x.png");
-        this.cameras.main.setBackgroundColor(0xaea2ba)
+        this.cameras.main.setBackgroundColor(0x5fad81)
     }
     create() {
         this.w = this.game.config.width;
@@ -72,7 +72,7 @@ class Intro extends Phaser.Scene {
             play.setScale(1);
         })
             .on('pointerdown', ()=> {
-            this.scene.start('outro');
+            this.scene.start('test');
         });
 
     }
@@ -91,13 +91,28 @@ class Outro extends Phaser.Scene {
     }
 }
 
+class Test extends SummaryScene {
+    constructor() {
+        super("test", 1, 2, 20000)
+    }
+}
+
 const game = new Phaser.Game({
+    physics: {
+        default: 'matter',
+        matter: {
+            gravity: {
+                y: 0
+            },
+            debug: true
+        }
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1920,
         height: 1080
     },
-    scene: [Intro, Outro, Level1, Level2, Level3, Summary],
+    scene: [Intro, Outro, Test],
     title: "Adventure Game",
 });
