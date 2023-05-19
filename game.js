@@ -72,7 +72,7 @@ class Intro extends Phaser.Scene {
             play.setScale(1);
         })
             .on('pointerdown', ()=> {
-            this.scene.start('test');
+            this.scene.start('example');
         });
 
     }
@@ -88,6 +88,95 @@ class Outro extends Phaser.Scene {
         this.add.text(50, 50, "Thank you for playing!").setFontSize(50);
         this.add.text(50, 100, "Click anywhere to restart.").setFontSize(20);
         this.input.on('pointerdown', () => this.scene.start('intro'));
+    }
+}
+
+class Example extends Phaser.Scene {
+    constructor() {
+        super('example')
+    }
+
+    drawTrajectory(dotx, doty) {
+        // function created by Adam Smith. Edited by me.
+
+        this.graphics.clear();
+
+        //create simulated "future" world
+        let hWorld = new Phaser.Physics.Matter.World(this, this.matter.config);
+        
+        //create simulated ball, anchor, and spring between them
+        let hFactory = new Phaser.Physics.Matter.Factory(hWorld);
+        let hDot = hFactory.circle(dotx, doty, 0, {isStatic: true})
+        let hBall = hFactory.circle(this.ball.position.x, this.ball.position.y, 32);
+        let hSpring = hFactory.spring(hBall, hDot, this.spring.length, this.spring.stiffness);
+        
+        // define time step for update
+        const step = 1000 / 60;
+        hWorld.update(0, step);
+
+        hWorld.removeConstraint(hSpring);
+
+        // draw the actual trajectory
+        for (let t = 0; t < 1200; t += step) {
+            let { x, y } = hBall.position;
+            if (this.ball.position.x < hDot.position.x && this.ball.position.y < hDot.position.y) {
+                if (x > hDot.position.x && y > hDot.position.y) {
+                    this.graphics.fillCircle(x, y, 3);
+                }
+            }
+            hWorld.update(t, step);
+        }
+
+    }
+
+    checkFired(){
+        //credit: aaron lee
+        //release the spring if the ball is far enough away
+        let disp = Phaser.Math.Distance.Between(this.ball.position.x, this.ball.position.y, this.dot.position.x, this.dot.position.y);
+        if (disp > this.ball.circleRadius && !this.input.activePointer.isDown) {
+            this.matter.world.removeConstraint(this.spring)
+            this.predict = false
+            this.graphics.clear()
+            //remove the mouse spring
+            const d = this.matter.world.localWorld.constraints.filter((c) => {
+                return c.label === "Pointer Constraint"
+            })
+            d.forEach((constraint) => {
+                this.matter.world.removeConstraint(constraint)
+            })
+            // this.matter.world.remove(this.matter.world.constraints[0])
+        }
+        if (this.predict) {
+            this.drawTrajectory(this.w * 0.25, this.h*0.25)
+        }
+    }
+
+
+    create() {
+        this.graphics = this.add.graphics();
+        this.matter.world.setBounds();
+        this.w = this.game.config.width
+        this.h = this.game.config.height
+
+        //the anchor for the spring
+        this.dot = this.matter.add.circle(this.w * 0.25, this.h * 0.25, 0, { isStatic: true })
+        //turn off collision for the anchor
+        this.dot.collisionFilter = {
+            category: 0x0000,
+            mask: 0x0000
+        };
+        const canDrag = this.matter.world.nextGroup();
+        this.ball = this.matter.add.circle(this.w * 0.25, this.h * 0.25, 32, { collisionFilter: { group: canDrag } });
+        this.spring = this.matter.add.spring(this.ball, this.dot, 0, 0.01);
+        this.matter.add.mouseSpring();
+        this.matter.add.mouseSpring({ collisionFilter: { group: canDrag } });
+
+        this.predict = true;
+    }
+    update() {
+        if(this.predict) {
+            this.checkFired()
+        }
     }
 }
 
@@ -113,6 +202,6 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [Intro, Outro, Test],
+    scene: [Intro, Outro, Example, Test],
     title: "Adventure Game",
 });
