@@ -1,9 +1,8 @@
 class SummaryScene extends Phaser.Scene {
-    constructor(key, level, strokes, playtime) {
+    constructor(key, level, strokes) {
         super(key);
         this.level = level;
         this.strokes = strokes;
-        this.playtime = playtime;
     }    
     
     create() {
@@ -19,12 +18,6 @@ class SummaryScene extends Phaser.Scene {
         this.add.text(this.w/2, this.h*0.2, "Level " + this.level.toString())
             .setFontSize(200).setOrigin(0.5).setColor(0x342f32);
         this.add.text(this.w/2, this.h*0.45, "Strokes: " + this.strokes.toString())
-            .setFontSize(100).setOrigin(0.5).setColor(0x342f32);
-
-        let seconds = Math.round(this.playtime/ 1000);
-        let min = Math.floor(seconds/60);
-        let remainder_sec = seconds % 60;
-        this.add.text(this.w/2, this.h*0.55, "Time: " + min.toString() + ":" + remainder_sec.toString())
             .setFontSize(100).setOrigin(0.5).setColor(0x342f32);
 
         let rep_rect = this.add.rectangle(this.w/2 - 300, this.h * 0.8, 500, 100, 0x25ace6).setInteractive()
